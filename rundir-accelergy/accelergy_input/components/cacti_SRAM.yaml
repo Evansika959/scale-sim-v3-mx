@@ -1,0 +1,74 @@
+compound_components:
+  version: 0.3
+  classes:
+  - name: cacti_SRAM
+    # A plain CACTI-modelled on-chip SRAM (storage only). Unlike `smartbuffer_SRAM`, it has
+    # NO buffet scoreboard / FIFOs / address-generator counters -- those have no real ERT and
+    # fall to Accelergy's dummy estimator (flat 1.0 pJ each), which is fabricated energy and is
+    # not part of what SCALE-Sim actually simulates (a simple double-buffered scratchpad).
+    # Result: the on-chip-buffer energy is 100% CACTI physics, no dummy term.
+    attributes:
+      technology: 40nm
+      width: 32
+      depth: 4096
+      n_rdwr_ports: 2
+      n_banks: 1
+    subcomponents:
+      - name: storage
+        class: SRAM
+        attributes:
+          technology: technology
+          width: width
+          depth: depth
+          n_rdwr_ports: n_rdwr_ports
+          n_banks: n_banks
+    actions:
+      - name: read
+        arguments:
+          data_delta: 0..1
+          address_delta: 0..1
+        subcomponents:
+          - name: storage
+            actions:
+              - name: read
+                arguments:
+                  data_delta: data_delta
+                  address_delta: address_delta
+      - name: write
+        arguments:
+          data_delta: 0..1
+          address_delta: 0..1
+        subcomponents:
+          - name: storage
+            actions:
+              - name: write
+                arguments:
+                  data_delta: data_delta
+                  address_delta: address_delta
+      - name: update                      # ofmap accumulate -> SRAM write
+        arguments:
+          data_delta: 0..1
+          address_delta: 0..1
+        subcomponents:
+          - name: storage
+            actions:
+              - name: write
+                arguments:
+                  data_delta: data_delta
+                  address_delta: address_delta
+      - name: fill                        # prefill -> SRAM write
+        arguments:
+          data_delta: 0..1
+          address_delta: 0..1
+        subcomponents:
+          - name: storage
+            actions:
+              - name: write
+                arguments:
+                  data_delta: data_delta
+                  address_delta: address_delta
+      - name: idle
+        subcomponents:
+          - name: storage
+            actions:
+              - name: idle

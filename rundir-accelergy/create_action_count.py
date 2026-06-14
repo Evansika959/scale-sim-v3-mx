@@ -123,12 +123,19 @@ SRAM_repeat_check = args.SRAM_repeat_check == 'True'
 #################################
 # Create action counts for SRAM #
 #################################
-detail_access = load_detail_report_data(os.path.join(os.path.join(os.getcwd(), os.pardir), saved_folder), run_name)
-repeat_access = load_repeat_report_data(os.path.join(os.path.join(os.getcwd(), os.pardir), saved_folder), run_name)
-
-#Collapse by row
+_data_dir = os.path.join(os.path.join(os.getcwd(), os.pardir), saved_folder)
+detail_access = load_detail_report_data(_data_dir, run_name)
 detail_access = np.sum(detail_access.to_numpy()[:,0:-1], axis=0)
-repeat_access = np.sum(repeat_access.to_numpy()[:,0:-1], axis=0)
+
+# This fork's SCALE-Sim build does not emit REPEAT_CYCLE.csv (legacy scale-sim-v3 only).
+# When it is absent, treat every SRAM read as non-repeated (repeat counts = 0) -- the
+# conservative full-energy default. Columns used: layerID(0) + 6 repeat counts (1..6).
+_repeat_csv = os.path.join(_data_dir, run_name, 'REPEAT_CYCLE.csv')
+if os.path.exists(_repeat_csv):
+    repeat_access = load_repeat_report_data(_data_dir, run_name)
+    repeat_access = np.sum(repeat_access.to_numpy()[:,0:-1], axis=0)
+else:
+    repeat_access = np.zeros(7)
 
 #Column index: Detailed access
 layerID = 0
@@ -226,12 +233,20 @@ layer_cycle = compute_access['Total Cycles'].values.tolist()
 
 PE_MAC_random = sum(layer_cycle)
 
+# Per-PE scratchpad (spad) access counts -- taken DIRECTLY from the simulator's measured
+# per-PE register-file accounting (DETAILED_ACCESS columns 19-24, emitted by scale-sim-v3 via
+# systolic_compute_*.get_pe_action_count). This flow does NOT fabricate spad counts; if the
+# report lacks those columns we abort rather than reconstruct them analytically.
+if OFMAP_Read_Count >= len(detail_access):
+    sys.exit("ERROR: DETAILED_ACCESS_REPORT has no per-PE scratchpad columns (19-24).\n"
+             "       Run the activity stage on scale-sim-v3 (it emits the measured spad\n"
+             "       counts). This flow refuses to reconstruct them analytically.")
 PE_weights_spad_write = int(detail_access[Filter_Write_Count])/PE_array_size
-PE_weights_spad_read = int(detail_access[Filter_Read_Count])/PE_array_size
-PE_ifmap_spad_write = int(detail_access[IFMAP_Write_Count])/PE_array_size
-PE_ifmap_spad_read = int(detail_access[IFMAP_Read_Count])/PE_array_size
-PE_psum_spad_write = int(detail_access[OFMAP_Write_Count])/PE_array_size
-PE_psum_spad_read = int(detail_access[OFMAP_Read_Count])/PE_array_size
+PE_weights_spad_read  = int(detail_access[Filter_Read_Count])/PE_array_size
+PE_ifmap_spad_write   = int(detail_access[IFMAP_Write_Count])/PE_array_size
+PE_ifmap_spad_read    = int(detail_access[IFMAP_Read_Count])/PE_array_size
+PE_psum_spad_write    = int(detail_access[OFMAP_Write_Count])/PE_array_size
+PE_psum_spad_read     = int(detail_access[OFMAP_Read_Count])/PE_array_size
 
 # Note: if use power/clock gating for MAC
 # PE_MAC_random = int(sum([x * y for x,y in zip(layer_cycle,layer_utilization)]))

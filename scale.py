@@ -52,7 +52,7 @@ if __name__ == '__main__':
         save_space = True
    
 
-    s = scalesim(save_disk_space=False,
+    s = scalesim(save_disk_space=save_space,   # honor -s N: skip per-cycle traces (keeps all reports)
                  verbose=True,
                  config=config,
                  topology=topology,

@@ -1,0 +1,5 @@
+{
+  "_README": "PE / array per-action energies in pJ — THE MX-netlist slot. accelergy_eval.py injects these over Accelergy's dummy 1.0 pJ; CACTI handles memory, these are what your synthesized MX array provides. USED by this (scale-sim-v3) flow: mac.mac_random x (num_PEs x active cycles) -> array_mac, and spad.read/write x the MEASURED per-PE register-file accesses (DETAILED_ACCESS cols 19-24) -> pe_regfile. NOT counted unless you switch create_action_count.py to the gated convention: mac_gated, mult_gated, mult_reused. Replace the placeholder values below with your synthesized MX numbers.",
+  "mac":  { "mac_random": 0.50, "mac_gated": 0.05, "mult_gated": 0.05, "mult_reused": 0.05 },
+  "spad": { "read": 0.02, "write": 0.02 }
+}

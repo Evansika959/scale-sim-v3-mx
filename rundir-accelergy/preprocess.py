@@ -24,11 +24,16 @@ def build_PE_Array(ArrayHeight, ArrayWidth):
 
 def build_GLB(NameGLB, SramSz, MemoryBanks):
     MemoryBanks = int(MemoryBanks)
-    SramSz = int(SramSz) * 1024
+    # bank_depth = number of memory_width-bit rows for the configured KB.
+    # (Was `KB*1024` which, with a 32-bit width, modeled ~4x the intended bytes.)
+    width_bits = 32
+    bank_depth = int(SramSz) * 1024 * 8 // (width_bits * MemoryBanks)
     acclg_glb = {}
     acclg_glb['name'] = NameGLB
-    acclg_glb['class'] = 'smartbuffer_SRAM'
-    acclg_glb['attributes'] = {'memory_width':32, 'n_banks':MemoryBanks, 'bank_depth':SramSz ,'n_buffets':1,'memory_depth':'bank_depth * n_banks'}
+    # bare CACTI SRAM (storage only) -- no dummy-estimated buffet/counter/FIFO peripherals, so
+    # the on-chip-buffer energy is 100% CACTI physics. (technology inherits from the subtree.)
+    acclg_glb['class'] = 'cacti_SRAM'
+    acclg_glb['attributes'] = {'width':width_bits, 'depth':bank_depth, 'n_rdwr_ports':2, 'n_banks':MemoryBanks}
 
     return acclg_glb
 
@@ -65,6 +70,8 @@ if __name__ == '__main__':
     parser.add_argument('-o', metavar='final output dir', type=str,
                         default="./results",
                         help="Path to output dir")
+    parser.add_argument('--technology', type=str, default='40nm',
+                        help="CACTI/Accelergy technology node, e.g. 65nm or 40nm")
 
     args = parser.parse_args()
     config = args.c 
@@ -102,7 +109,7 @@ if __name__ == '__main__':
 
     subtree_0 = {}
     subtree_0['name'] = 'systolic_array'
-    subtree_0['attributes'] = {'technology':'40nm'}
+    subtree_0['attributes'] = {'technology': args.technology}
     subtree_0['local'] = GLBs + DRAMs
     subtree_0['subtree'] = [PEs]
 
