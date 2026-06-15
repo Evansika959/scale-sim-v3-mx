@@ -89,23 +89,23 @@ accelergy_output/                              (moved to the run's /tmp output d
 ## Conda environment
 
 `demo_22nm_walkthrough.ipynb` and `run_example_22nm.sh` need one env with **Accelergy + CACTI +
-`numpy<2` + Jupyter**. Build it once:
+`numpy<2` + Jupyter**. **One command** builds it (fresh machine — needs `conda` + `git`/`make`/`g++`):
 
 ```bash
-conda env create -f rundir-accelergy/environment.yml   # python side
-rundir-accelergy/setup_conda.sh                         # accelergy + CACTI build + kernel + config
+bash rundir-accelergy/setup_conda.sh
 ```
 
-`setup_conda.sh` clones Accelergy and its plug-ins, builds CACTI (HewlettPackard/cacti), installs
-everything into the `scalesim-mx` env, registers a Jupyter kernel of the same name, and points
-`~/.config/accelergy/accelergy_config.yaml` at this env's plug-ins. Then:
+It finds conda (even if not on `PATH`), creates the `scalesim-mx` env from `environment.yml`,
+clones Accelergy + its plug-ins **at pinned commits** (deterministic), builds CACTI, installs them,
+registers the `Python (scalesim-mx)` Jupyter kernel, points `~/.config/accelergy/` at this env, and
+runs a tiny end-to-end smoke test. Then:
 
 ```bash
-# notebook  — pick the "Python (scalesim-mx)" kernel, Run All
-conda activate scalesim-mx && jupyter lab rundir-accelergy/demo_22nm_walkthrough.ipynb
-# shell     — point the driver at the conda env
-VENV=~/miniconda3/envs/scalesim-mx rundir-accelergy/run_example_22nm.sh
+conda activate scalesim-mx
+./rundir-accelergy/run_example_22nm.sh                            # shell driver
+jupyter lab rundir-accelergy/demo_22nm_walkthrough.ipynb         # notebook (kernel: Python (scalesim-mx))
 ```
+(`run_example_22nm.sh` defaults `VENV` to the active conda env, so no path edits are needed.)
 
 Notes:
 - **Self-contained:** stage 2 is this repo's own `scale.py` (already patched so `-s N` skips the

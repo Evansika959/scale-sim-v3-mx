@@ -24,8 +24,9 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"     # .../rundir-accelergy
 ROOT="$(cd "$HERE/.." && pwd)"                            # scale-sim-v3-mx root (has scale.py)
 
-# env that has accelergy + CACTI + numpy<2 + pandas/yaml (override with VENV=...)
-VENV="${VENV:-/home/xinting/miniconda3/envs/scalesim-mx}"
+# env that has accelergy + CACTI + numpy<2 + pandas/yaml. Defaults to the active conda env
+# (so `conda activate scalesim-mx` then run just works on any machine); override with VENV=...
+VENV="${VENV:-${CONDA_PREFIX:-/home/xinting/miniconda3/envs/scalesim-mx}}"
 export PATH="$VENV/bin:$PATH"                             # python3, accelergy resolve here
 
 TECH="${TECH:-22nm}"

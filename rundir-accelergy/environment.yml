@@ -1,9 +1,8 @@
-# Conda environment for the SCALE-Sim + Accelergy + CACTI MX power demo.
-# This file builds the *Python* side. Accelergy + CACTI + the Jupyter kernel are added by
-# setup_conda.sh (they are not on PyPI/conda — they come from git + a C++ build).
+# Conda environment for the SCALE-Sim + Accelergy + CACTI MX power demo (the *Python* side).
+# You don't run this directly — setup_conda.sh consumes it and also adds Accelergy + CACTI +
+# the Jupyter kernel (which aren't on PyPI/conda — they come from git + a C++ build):
 #
-#   conda env create -f rundir-accelergy/environment.yml
-#   rundir-accelergy/setup_conda.sh         # accelergy stack, CACTI build, kernel, config
+#   bash rundir-accelergy/setup_conda.sh
 #
 name: scalesim-mx
 channels:
